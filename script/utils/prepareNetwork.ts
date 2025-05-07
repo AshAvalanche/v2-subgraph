@@ -17,6 +17,7 @@ export enum NETWORK {
   UNICHAIN = 'unichain-mainnet',
   WORLDCHAIN = 'worldchain-mainnet',
   ZORA = 'zora-mainnet',
+  CUSTOM = 'custom'
 }
 
 export enum SUBGRAPH_TYPE {
@@ -87,19 +88,17 @@ export function getSubgraphName(subgraphType: string) {
   return process.env.V2_SUBGRAPH_NAME
 }
 
-export function getAlchemyDeploymentParams(): {
-  node: string
+export function getCustomDeploymentParams(): {
+  node: string,
   ipfs: string
-  deployKey: string
 } {
   dotenv.config()
-  if (!process.env.ALCHEMY_DEPLOY_URL || !process.env.ALCHEMY_IPFS_URL || !process.env.ALCHEMY_DEPLOY_KEY) {
-    throw new Error('ALCHEMY_DEPLOY_URL, ALCHEMY_IPFS_URL, and ALCHEMY_DEPLOY_KEY must be set')
+  if (!process.env.CUSTOM_DEPLOY_URL || !process.env.CUSTOM_IPFS_URL) {
+    throw new Error('CUSTOM_DEPLOY_URL or CUSTOM_IPFS_URL must be set')
   }
   return {
-    node: process.env.ALCHEMY_DEPLOY_URL,
-    ipfs: process.env.ALCHEMY_IPFS_URL,
-    deployKey: process.env.ALCHEMY_DEPLOY_KEY,
+    node: process.env.CUSTOM_DEPLOY_URL,
+    ipfs: process.env.CUSTOM_IPFS_URL,
   }
 }
 
