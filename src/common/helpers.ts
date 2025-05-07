@@ -136,6 +136,7 @@ export function createUser(address: Address): void {
   let user = User.load(address.toHexString())
   if (!user) {
     user = new User(address.toHexString())
+    user.usdSwapped = ZERO_BD // Initialize usdSwapped with a default value of 0
     user.save()
   }
 }
