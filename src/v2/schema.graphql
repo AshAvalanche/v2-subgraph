@@ -313,3 +313,10 @@ type PairTokenLookup @entity(immutable: true) {
   id: ID!
   pair: Pair!
 }
+
+type LiquidityProviderBalance @entity {
+  id: ID!
+  pair: Pair!
+  user: Bytes!
+  balance: BigDecimal!
+}

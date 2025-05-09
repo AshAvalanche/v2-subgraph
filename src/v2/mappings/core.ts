@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { BigDecimal, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
+import { BigDecimal, BigInt, store, ethereum, log } from '@graphprotocol/graph-ts'
 
 import {
   Bundle,
@@ -10,6 +10,7 @@ import {
   Token,
   Transaction,
   UniswapFactory,
+  LiquidityProviderBalance,
 } from '../../../generated/schema'
 import { Burn, Mint, Swap, Sync, Transfer } from '../../../generated/templates/Pair/Pair'
 import { FACTORY_ADDRESS } from '../../common/chain'
@@ -194,6 +195,42 @@ export function handleTransfer(event: Transfer): void {
     transaction.save()
   }
 
+  // Load or create the user's LP token balance
+  let userBalanceId = event.params.from.toHexString().concat('-').concat(pair.id);
+  let userBalance = LiquidityProviderBalance.load(userBalanceId);
+  if (!userBalance) {
+    userBalance = new LiquidityProviderBalance(userBalanceId);
+    userBalance.pair = pair.id;
+    userBalance.user = event.params.from;
+    userBalance.balance = ZERO_BD;
+  }
+
+  // Update the user's balance
+  userBalance.balance = userBalance.balance.minus(value);
+  if (userBalance.balance.equals(ZERO_BD)) {
+    pair.liquidityProviderCount = pair.liquidityProviderCount.minus(ONE_BI);
+  }
+  userBalance.save();
+
+  // Handle the recipient's balance
+  let recipientBalanceId = event.params.to.toHexString().concat('-').concat(pair.id);
+  let recipientBalance = LiquidityProviderBalance.load(recipientBalanceId);
+  if (!recipientBalance) {
+    recipientBalance = new LiquidityProviderBalance(recipientBalanceId);
+    recipientBalance.pair = pair.id;
+    recipientBalance.user = event.params.to;
+    recipientBalance.balance = ZERO_BD;
+  }
+
+  recipientBalance.balance = recipientBalance.balance.plus(value);
+  if (recipientBalance.balance.equals(value)) {
+    pair.liquidityProviderCount = pair.liquidityProviderCount.plus(ONE_BI);
+  }
+  recipientBalance.save();
+
+  // Save the updated pair
+  pair.save();
+
   transaction.save()
 }
 
@@ -249,6 +286,10 @@ export function handleSync(event: Sync): void {
     .times(token0.derivedETH as BigDecimal)
     .plus(pair.reserve1.times(token1.derivedETH as BigDecimal))
   pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice)
+
+  log.info("Calculating reserveUSD for pair: {}", [pair.id]);
+  log.info("Reserve ETH: {}", [pair.reserveETH.toString()]);
+  log.info("ETH Price: {}", [bundle.ethPrice.toString()]);
 
   // use tracked amounts globally
   uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.plus(trackedLiquidityETH)
@@ -423,7 +464,7 @@ export function handleSwap(event: Swap): void {
 
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(amount0Total, token0 as Token, amount1Total, token1 as Token, pair as Pair)
-
+  log.info('trackedAmountUSD: {}', [trackedAmountUSD.toString()])
   let trackedAmountETH: BigDecimal
   if (bundle.ethPrice.equals(ZERO_BD)) {
     trackedAmountETH = ZERO_BD
