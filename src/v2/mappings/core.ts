@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
 import { BigDecimal, BigInt, store, ethereum, log } from '@graphprotocol/graph-ts'
+import { User } from '../../../generated/schema'
 
 import {
   Bundle,
@@ -586,4 +587,15 @@ export function handleSwap(event: Swap): void {
     amount1Total.times(token1.derivedETH as BigDecimal).times(bundle.ethPrice)
   )
   token1DayData.save()
+
+  // Ensure the user entity exists before updating usdSwapped
+  let user = User.load(event.transaction.from.toHexString());
+  if (!user) {
+    createUser(event.transaction.from);
+    user = User.load(event.transaction.from.toHexString())!;
+  }
+
+  // Update the user's usdSwapped field with the trackedAmountUSD from the swap
+  user.usdSwapped = user.usdSwapped.plus(trackedAmountUSD);
+  user.save();
 }
