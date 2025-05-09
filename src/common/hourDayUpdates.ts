@@ -14,6 +14,7 @@ import {
 import { PairHourData } from '../../generated/schema'
 import { FACTORY_ADDRESS } from './chain'
 import { ONE_BI, ZERO_BD, ZERO_BI } from './constants'
+import { calculateAPY } from './pricing'
 
 export function updateUniswapDayData(event: ethereum.Event): UniswapDayData {
   let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
@@ -34,6 +35,8 @@ export function updateUniswapDayData(event: ethereum.Event): UniswapDayData {
   uniswapDayData.totalLiquidityUSD = uniswap.totalLiquidityUSD
   uniswapDayData.totalLiquidityETH = uniswap.totalLiquidityETH
   uniswapDayData.txCount = uniswap.txCount
+  let APY = calculateAPY(uniswapDayData.dailyVolumeUSD, uniswapDayData.totalLiquidityUSD)
+  uniswapDayData.APY = APY
   uniswapDayData.save()
 
   return uniswapDayData as UniswapDayData
@@ -62,6 +65,8 @@ export function updatePairDayData(pair: Pair, event: ethereum.Event): PairDayDat
   pairDayData.reserve1 = pair.reserve1
   pairDayData.reserveUSD = pair.reserveUSD
   pairDayData.dailyTxns = pairDayData.dailyTxns.plus(ONE_BI)
+  let apy = calculateAPY(pairDayData.dailyVolumeUSD, pairDayData.reserveUSD);
+  pairDayData.APY = apy;
   pairDayData.save()
 
   return pairDayData as PairDayData

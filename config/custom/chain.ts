@@ -11,7 +11,9 @@ export const ROUTER_ADDRESS = "0xe336d36FacA76840407e6836d26119E1EcE0A2b4";
 
 export const REFERENCE_TOKEN = WETH_ADDRESS;
 export const STABLE_TOKEN_PAIRS = [
-  `${WETH_ADDRESS}-${USDC_ADDRESS}`
+  `0x9fbcf01cee6a10cc9bf3c2a57450fa020e2e616e`, // WETH/USDC
+  `0x4a54c00fe54b42868b8e95abf611cbb41c0b76c5`, // DAI/USDC
+
 ];
 
 // token where amounts should contribute to tracked volume and liquidity
@@ -34,7 +36,7 @@ export const STABLECOINS = [
 export const MINIMUM_USD_THRESHOLD_NEW_PAIRS = BigDecimal.fromString('0')
 
 // minimum liquidity for price to get tracked
-export const MINIMUM_LIQUIDITY_THRESHOLD_ETH = BigDecimal.fromString('1')
+export const MINIMUM_LIQUIDITY_THRESHOLD_ETH = BigDecimal.fromString('0')
 
 export class TokenDefinition {
   address: Address

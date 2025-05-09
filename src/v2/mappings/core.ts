@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { BigDecimal, BigInt, store } from '@graphprotocol/graph-ts'
+import { BigDecimal, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
 
 import {
   Bundle,
@@ -21,7 +21,7 @@ import {
   updateTokenDayData,
   updateUniswapDayData,
 } from '../../common/hourDayUpdates'
-import { findEthPerToken, getEthPriceInUSD, getTrackedLiquidityUSD, getTrackedVolumeUSD } from '../../common/pricing'
+import { findEthPerToken, getEthPriceInUSD, getTrackedLiquidityUSD, getTrackedVolumeUSD, calculateAPY } from '../../common/pricing'
 
 function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId)!.sender !== null // sufficient checks

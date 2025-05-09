@@ -203,6 +203,8 @@ type UniswapDayData @entity {
   totalVolumeUSD: BigDecimal! # Accumulate at each trade, not just calculated off whatever totalVolume is. making it more accurate as it is a live conversion
   totalLiquidityUSD: BigDecimal!
 
+  APY: BigDecimal
+
   txCount: BigInt!
 }
 
@@ -245,6 +247,7 @@ type PairDayData @entity {
 
   # derived liquidity
   reserveUSD: BigDecimal!
+  APY: BigDecimal
 
   # volume stats
   dailyVolumeToken0: BigDecimal!

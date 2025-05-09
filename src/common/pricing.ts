@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
-import { Address, BigDecimal, BigInt } from '@graphprotocol/graph-ts/index'
+import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts/index'
 
-import { Bundle, Pair, PairTokenLookup, Token } from '../../generated/schema'
+import { Bundle, Pair, PairTokenLookup, Token, PairDayData, UniswapDayData} from '../../generated/schema'
 import {
   MINIMUM_LIQUIDITY_THRESHOLD_ETH,
   MINIMUM_USD_THRESHOLD_NEW_PAIRS,
@@ -59,40 +59,51 @@ export function safeDiv(amount0: BigDecimal, amount1: BigDecimal): BigDecimal {
  * @todo update to be derived ETH (add stablecoin estimates)
  **/
 export function findEthPerToken(token: Token): BigDecimal {
-  if (token.id == REFERENCE_TOKEN) {
-    return ONE_BD
+  // Handle the reference token (e.g., WETH) with a fixed value of 1 ETH
+  if (token.id.toLowerCase() == REFERENCE_TOKEN.toLowerCase()) {
+    return ONE_BD;
   }
 
-  if (STABLECOINS.includes(token.id)) {
-    const bundle = Bundle.load('1')!
-    return safeDiv(ONE_BD, bundle.ethPrice)
+  // Handle stablecoins by inverting the ETH/USD price
+  if (STABLECOINS.map<string>(s => s.toLowerCase()).includes(token.id.toLowerCase())) {
+    const bundle = Bundle.load('1');
+    if (bundle && bundle.ethPrice.notEqual(ZERO_BD)) {
+      return safeDiv(ONE_BD, bundle.ethPrice);
+    }
+    return ZERO_BD;
   }
 
-  // loop through whitelist and check if paired with any
+  // Search for pairs with whitelisted tokens
   for (let i = 0; i < WHITELIST.length; ++i) {
-    let pairLookup = PairTokenLookup.load(token.id.concat('-').concat(Address.fromString(WHITELIST[i]).toHexString()))
+    let pairLookup = PairTokenLookup.load(
+      token.id.concat('-').concat(Address.fromString(WHITELIST[i]).toHexString())
+    );
+
     if (pairLookup) {
-      let pairId = pairLookup.pair
+      let pairId = pairLookup.pair;
       if (pairId != ADDRESS_ZERO) {
-        let pair = Pair.load(pairId)
-        if (pair) {
-          if (pair.token0 == token.id && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
-            let token1 = Token.load(pair.token1)
+        let pair = Pair.load(pairId);
+        if (pair && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
+          // If the token is token0
+          if (pair.token0 == token.id) {
+            let token1 = Token.load(pair.token1);
             if (token1) {
-              return pair.token1Price.times(token1.derivedETH as BigDecimal) // return token1 per our token * Eth per token 1
+              return pair.token1Price.times(token1.derivedETH as BigDecimal);
             }
           }
-          if (pair.token1 == token.id && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
-            let token0 = Token.load(pair.token0)
+          // If the token is token1
+          if (pair.token1 == token.id) {
+            let token0 = Token.load(pair.token0);
             if (token0) {
-              return pair.token0Price.times(token0.derivedETH as BigDecimal) // return token0 per our token * ETH per token 0
+              return pair.token0Price.times(token0.derivedETH as BigDecimal);
             }
           }
         }
       }
     }
   }
-  return ZERO_BD // nothing was found return 0
+
+  return ZERO_BD; // Return 0 if no price is found
 }
 
 /**
@@ -215,3 +226,35 @@ export function getTokenTrackedLiquidityUSD(
   // neither token is on white list, tracked volume is 0
   return ZERO_BD
 }
+
+
+/**
+ * Calculate the APY for a Uniswap V2 LP position based on daily fees.
+ *
+ * APY = (dailyFees / totalReserveUSD) * 365
+ *
+ * @param dailyVolumeUSD - the daily volume in USD
+ * @param reserveUSD - the total reserve in USD
+ * @returns BigDecimal - the APY (as a decimal, e.g. 0.15 = 15%)
+ */
+export function calculateAPY(dailyVolumeUSD: BigDecimal, reserveUSD: BigDecimal): BigDecimal {
+  // Avoid division by zero
+  if (reserveUSD.equals(ZERO_BD)) {
+    return ZERO_BD
+  }
+
+  // Uniswap V2 fee rate is 0.3% per swap
+  let feeRate = BigDecimal.fromString('0.003')
+
+  // Compute daily fees in USD
+  let dailyFeesUSD = dailyVolumeUSD.times(feeRate)
+
+  // Daily rate relative to pool TVL
+  let dailyRate = dailyFeesUSD.div(reserveUSD)
+
+  // Annualize (simple compounding approximation)
+  let apy = dailyRate.times(BigDecimal.fromString('365'))
+
+  return apy
+}
+
