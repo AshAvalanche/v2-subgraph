@@ -63,7 +63,7 @@ type Token @entity {
   minuteArray: [Int!]!
   hourArray: [Int!]!
 
-    # Archive helpers
+  # Archive helpers
   lastMinuteRecorded: BigInt!
   lastHourRecorded: BigInt!
 }
@@ -250,6 +250,8 @@ type UniswapDayData @entity {
   totalLiquidityUSD: BigDecimal!
 
   txCount: BigInt!
+
+  APY: BigDecimal
 }
 
 type PairHourData @entity {
@@ -297,6 +299,9 @@ type PairDayData @entity {
   dailyVolumeToken1: BigDecimal!
   dailyVolumeUSD: BigDecimal!
   dailyTxns: BigInt!
+
+  # APY
+  APY: BigDecimal
 }
 
 type TokenDayData @entity {
