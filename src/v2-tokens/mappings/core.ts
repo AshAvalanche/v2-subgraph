@@ -179,6 +179,11 @@ export function handleSwap(event: Swap): void {
   pair.volumeToken1 = pair.volumeToken1.plus(amount1Total)
   pair.untrackedVolumeUSD = pair.untrackedVolumeUSD.plus(derivedAmountUSD)
   pair.txCount = pair.txCount.plus(ONE_BI)
+  pair.totalSupply = pair.totalSupply
+    .plus(amount0In)
+    .plus(amount0Out)
+    .plus(amount1In)
+    .plus(amount1Out)
   pair.save()
 
   // update global values, only used tracked amounts for volume
