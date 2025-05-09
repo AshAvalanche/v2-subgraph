@@ -170,23 +170,17 @@ export function getTrackedVolumeUSD(
     }
   }
 
-  log.info('whitelist: {}', [WHITELIST.toString()])
-  log.info('token0: {}', [token0.id])
-  log.info('token1: {}', [token1.id])
-  // both are whitelist tokens, take average of both amounts
+
   if (token0InWhitelist && token1InWhitelist) {
-    log.info('XXXXXXXXXX here 0', [])
     return tokenAmount0.times(price0).plus(tokenAmount1.times(price1)).div(BigDecimal.fromString('2'))
   }
 
-  log.info('XXXXXXXXXX here 1', [])
 
   // take full value of the whitelisted token amount
   if (token0InWhitelist && !token1InWhitelist) {
     return tokenAmount0.times(price0)
   }
 
-  log.info('XXXXXXXXX here 2', [])
 
   // take full value of the whitelisted token amount
   if (!token0InWhitelist && token1InWhitelist) {
@@ -216,17 +210,17 @@ export function getTrackedLiquidityUSD(
   let price1 = token1.derivedETH.times(bundle.ethPrice)
 
   // both are whitelist tokens, take average of both amounts
-  if (WHITELIST.includes(token0.id) && WHITELIST.includes(token1.id)) {
+  if (WHITELIST.map<string>(s => s.toLowerCase()).includes(token0.id.toLowerCase()) && WHITELIST.map<string>(s => s.toLowerCase()).includes(token1.id.toLowerCase())) {
     return tokenAmount0.times(price0).plus(tokenAmount1.times(price1))
   }
 
   // take double value of the whitelisted token amount
-  if (WHITELIST.includes(token0.id) && !WHITELIST.includes(token1.id)) {
+  if (WHITELIST.map<string>(s => s.toLowerCase()).includes(token0.id.toLowerCase()) && !WHITELIST.map<string>(s => s.toLowerCase()).includes(token1.id.toLowerCase())) {
     return tokenAmount0.times(price0).times(BigDecimal.fromString('2'))
   }
 
   // take double value of the whitelisted token amount
-  if (!WHITELIST.includes(token0.id) && WHITELIST.includes(token1.id)) {
+  if (!WHITELIST.map<string>(s => s.toLowerCase()).includes(token0.id.toLowerCase()) && WHITELIST.map<string>(s => s.toLowerCase()).includes(token1.id.toLowerCase())) {
     return tokenAmount1.times(price1).times(BigDecimal.fromString('2'))
   }
 
@@ -245,17 +239,17 @@ export function getTokenTrackedLiquidityUSD(
   let price1 = companionToken.derivedETH.times(bundle.ethPrice)
 
   // both are whitelist tokens, take average of both amounts
-  if (WHITELIST.includes(tokenForPricing.id) && WHITELIST.includes(companionToken.id)) {
+  if (WHITELIST.map<string>(s => s.toLowerCase()).includes(tokenForPricing.id.toLowerCase()) && WHITELIST.map<string>(s => s.toLowerCase()).includes(companionToken.id.toLowerCase())) {
     return tokenForPricingAmount.times(price0)
   }
 
   // take double value of the whitelisted token amount
-  if (WHITELIST.includes(tokenForPricing.id) && !WHITELIST.includes(companionToken.id)) {
+  if (WHITELIST.map<string>(s => s.toLowerCase()).includes(tokenForPricing.id.toLowerCase()) && !WHITELIST.map<string>(s => s.toLowerCase()).includes(companionToken.id.toLowerCase())) {
     return tokenForPricingAmount.times(price0)
   }
 
   // take double value of the whitelisted token amount
-  if (!WHITELIST.includes(tokenForPricing.id) && WHITELIST.includes(companionToken.id)) {
+  if (!WHITELIST.map<string>(s => s.toLowerCase()).includes(tokenForPricing.id.toLowerCase()) && WHITELIST.map<string>(s => s.toLowerCase()).includes(companionToken.id.toLowerCase())) {
     return companionTokenAmount.times(price1)
   }
 
