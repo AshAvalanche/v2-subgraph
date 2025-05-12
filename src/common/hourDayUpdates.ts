@@ -35,8 +35,6 @@ export function updateUniswapDayData(event: ethereum.Event): UniswapDayData {
   uniswapDayData.totalLiquidityUSD = uniswap.totalLiquidityUSD
   uniswapDayData.totalLiquidityETH = uniswap.totalLiquidityETH
   uniswapDayData.txCount = uniswap.txCount
-  let APY = calculateAPY(uniswapDayData.dailyVolumeUSD, uniswapDayData.totalLiquidityUSD)
-  uniswapDayData.APY = APY
   uniswapDayData.save()
 
   return uniswapDayData as UniswapDayData
