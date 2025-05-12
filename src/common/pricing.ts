@@ -275,6 +275,10 @@ export function calculateAPY(dailyVolumeUSD: BigDecimal, reserveUSD: BigDecimal)
 
   // Uniswap V2 fee rate is 0.3% per swap
   let feeRate = BigDecimal.fromString('0.003')
+  log.info("APY CALC: volumeUSD={}, reserveUSD={}", [
+    dailyVolumeUSD.toString(),
+    reserveUSD.toString()
+  ])
 
   // Compute daily fees in USD
   let dailyFeesUSD = dailyVolumeUSD.times(feeRate)

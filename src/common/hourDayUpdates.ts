@@ -57,6 +57,7 @@ export function updatePairDayData(pair: Pair, event: ethereum.Event): PairDayDat
     pairDayData.dailyVolumeToken0 = ZERO_BD
     pairDayData.dailyVolumeToken1 = ZERO_BD
     pairDayData.dailyVolumeUSD = ZERO_BD
+    pairDayData.APY = ZERO_BD
     pairDayData.dailyTxns = ZERO_BI
   }
 
@@ -65,8 +66,6 @@ export function updatePairDayData(pair: Pair, event: ethereum.Event): PairDayDat
   pairDayData.reserve1 = pair.reserve1
   pairDayData.reserveUSD = pair.reserveUSD
   pairDayData.dailyTxns = pairDayData.dailyTxns.plus(ONE_BI)
-  let apy = calculateAPY(pairDayData.dailyVolumeUSD, pairDayData.reserveUSD);
-  pairDayData.APY = apy;
   pairDayData.save()
 
   return pairDayData as PairDayData

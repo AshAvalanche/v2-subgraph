@@ -564,6 +564,7 @@ export function handleSwap(event: Swap): void {
   pairDayData.dailyVolumeToken0 = pairDayData.dailyVolumeToken0.plus(amount0Total)
   pairDayData.dailyVolumeToken1 = pairDayData.dailyVolumeToken1.plus(amount1Total)
   pairDayData.dailyVolumeUSD = pairDayData.dailyVolumeUSD.plus(trackedAmountUSD)
+  pairDayData.APY = calculateAPY(pairDayData.dailyVolumeUSD, pairDayData.reserveUSD)
   pairDayData.save()
 
   // update hourly pair data
