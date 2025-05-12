@@ -14,7 +14,6 @@ import {
 import { PairHourData } from '../../generated/schema'
 import { FACTORY_ADDRESS } from './chain'
 import { ONE_BI, ZERO_BD, ZERO_BI } from './constants'
-import { calculateAPY } from './pricing'
 
 export function updateUniswapDayData(event: ethereum.Event): UniswapDayData {
   let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
