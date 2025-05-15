@@ -9,18 +9,18 @@ export const ROUTER_ADDRESS = "0x13b5932c12F0ac19716D4cbAcDBc078a5E27176e";
 
 export const REFERENCE_TOKEN = WPBBTC_ADDRESS;
 export const STABLE_TOKEN_PAIRS = [
-  `0x19d6d66f3e11ef83545fa187187674afbd55bf8a`, // USDC-USDT
+  '0xf9aa1a3691088ba1ee7ade78c3147b0605dd159d', // USDC-WBPBTC
 
 ];
 
 // token where amounts should contribute to tracked volume and liquidity
 export const WHITELIST: string[] = [
-  WPBBTC_ADDRESS, // WETH
-  USDC_ADDRESS, // USDC
-  USDT_ADDRESS, // PLANB
-  PLANB_ADDRESS
+  WPBBTC_ADDRESS.toLowerCase(),
+  USDC_ADDRESS.toLowerCase(),
+  USDT_ADDRESS.toLowerCase(),
+  PLANB_ADDRESS.toLowerCase()
+];
 
-]
 
 export const STABLECOINS = [
   USDC_ADDRESS,
