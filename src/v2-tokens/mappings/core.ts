@@ -13,7 +13,7 @@ import {
   updateTokenHourData,
   updateUniswapDayData,
 } from '../../common/hourDayUpdates'
-import { findEthPerToken, getEthPriceInUSD, getTrackedLiquidityUSD, getTrackedVolumeUSD } from '../../common/pricing'
+import { findEthPerToken, getNativeTokenPriceInUSD, getTrackedLiquidityUSD, getTrackedVolumeUSD } from '../../common/pricing'
 import { updateTokenMinuteData } from './minuteUpdates'
 
 export function handleSync(event: Sync): void {
@@ -32,7 +32,7 @@ export function handleSync(event: Sync): void {
   }
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
-  uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
+  uniswap.totalLiquidityNativeToken = uniswap.totalLiquidityNativeToken.minus(pair.trackedReserveNativeToken as BigDecimal)
 
   // reset token total liquidity amounts
   token0.totalLiquidity = token0.totalLiquidity.minus(pair.reserve0)
@@ -48,39 +48,39 @@ export function handleSync(event: Sync): void {
 
   pair.save()
 
-  // update ETH price now that reserves could have changed
+  // update native token price now that reserves could have changed
   let bundle = Bundle.load('1')
   if (!bundle) {
     bundle = new Bundle('1')
   }
-  bundle.ethPrice = getEthPriceInUSD()
+  bundle.nativeTokenPrice = getNativeTokenPriceInUSD()
   bundle.save()
 
-  token0.derivedETH = findEthPerToken(token0 as Token)
-  token1.derivedETH = findEthPerToken(token1 as Token)
+  token0.derivedNativeToken = findEthPerToken(token0 as Token)
+  token1.derivedNativeToken = findEthPerToken(token1 as Token)
   token0.save()
   token1.save()
 
   // get tracked liquidity - will be 0 if neither is in whitelist
-  let trackedLiquidityETH: BigDecimal
-  if (bundle.ethPrice.notEqual(ZERO_BD)) {
-    trackedLiquidityETH = getTrackedLiquidityUSD(pair.reserve0, token0 as Token, pair.reserve1, token1 as Token).div(
-      bundle.ethPrice
+  let trackedLiquidityNativeToken: BigDecimal
+  if (bundle.nativeTokenPrice.notEqual(ZERO_BD)) {
+    trackedLiquidityNativeToken = getTrackedLiquidityUSD(pair.reserve0, token0 as Token, pair.reserve1, token1 as Token).div(
+      bundle.nativeTokenPrice
     )
   } else {
-    trackedLiquidityETH = ZERO_BD
+    trackedLiquidityNativeToken = ZERO_BD
   }
 
   // use derived amounts within pair
-  pair.trackedReserveETH = trackedLiquidityETH
-  pair.reserveETH = pair.reserve0
-    .times(token0.derivedETH as BigDecimal)
-    .plus(pair.reserve1.times(token1.derivedETH as BigDecimal))
-  pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice)
+  pair.trackedReserveNativeToken = trackedLiquidityNativeToken
+  pair.reserveNativeToken = pair.reserve0
+    .times(token0.derivedNativeToken as BigDecimal)
+    .plus(pair.reserve1.times(token1.derivedNativeToken as BigDecimal))
+  pair.reserveUSD = pair.reserveNativeToken.times(bundle.nativeTokenPrice)
 
   // use tracked amounts globally
-  uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.plus(trackedLiquidityETH)
-  uniswap.totalLiquidityUSD = uniswap.totalLiquidityETH.times(bundle.ethPrice)
+  uniswap.totalLiquidityNativeToken = uniswap.totalLiquidityNativeToken.plus(trackedLiquidityNativeToken)
+  uniswap.totalLiquidityUSD = uniswap.totalLiquidityNativeToken.times(bundle.nativeTokenPrice)
 
   // now correctly set liquidity amounts for each token
   token0.totalLiquidity = token0.totalLiquidity.plus(pair.reserve0)
@@ -136,27 +136,27 @@ export function handleSwap(event: Swap): void {
   let amount0Total = amount0Out.plus(amount0In)
   let amount1Total = amount1Out.plus(amount1In)
 
-  // ETH/USD prices
+  // native token/USD prices
   let bundle = Bundle.load('1')
   if (!bundle) {
     return
   }
 
-  // get total amounts of derived USD and ETH for tracking
-  let derivedAmountETH = token1.derivedETH
+  // get total amounts of derived USD and native token for tracking
+  let derivedAmountNativeToken = token1.derivedNativeToken
     .times(amount1Total)
-    .plus(token0.derivedETH.times(amount0Total))
+    .plus(token0.derivedNativeToken.times(amount0Total))
     .div(BigDecimal.fromString('2'))
-  let derivedAmountUSD = derivedAmountETH.times(bundle.ethPrice)
+  let derivedAmountUSD = derivedAmountNativeToken.times(bundle.nativeTokenPrice)
 
   // only accounts for volume through white listed tokens
   let trackedAmountUSD = getTrackedVolumeUSD(amount0Total, token0 as Token, amount1Total, token1 as Token, pair as Pair)
 
-  let trackedAmountETH: BigDecimal
-  if (bundle.ethPrice.equals(ZERO_BD)) {
-    trackedAmountETH = ZERO_BD
+  let trackedAmountNativeToken: BigDecimal
+  if (bundle.nativeTokenPrice.equals(ZERO_BD)) {
+    trackedAmountNativeToken = ZERO_BD
   } else {
-    trackedAmountETH = trackedAmountUSD.div(bundle.ethPrice)
+    trackedAmountNativeToken = trackedAmountUSD.div(bundle.nativeTokenPrice)
   }
 
   // update token0 global volume and token liquidity stats
@@ -192,7 +192,7 @@ export function handleSwap(event: Swap): void {
     return
   }
   uniswap.totalVolumeUSD = uniswap.totalVolumeUSD.plus(trackedAmountUSD)
-  uniswap.totalVolumeETH = uniswap.totalVolumeETH.plus(trackedAmountETH)
+  uniswap.totalVolumeNativeToken = uniswap.totalVolumeNativeToken.plus(trackedAmountNativeToken)
   uniswap.untrackedVolumeUSD = uniswap.untrackedVolumeUSD.plus(derivedAmountUSD)
   uniswap.txCount = uniswap.txCount.plus(ONE_BI)
 
@@ -211,7 +211,7 @@ export function handleSwap(event: Swap): void {
 
   // swap specific updating
   uniswapDayData.dailyVolumeUSD = uniswapDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  uniswapDayData.dailyVolumeETH = uniswapDayData.dailyVolumeETH.plus(trackedAmountETH)
+  uniswapDayData.dailyVolumeNativeToken = uniswapDayData.dailyVolumeNativeToken.plus(trackedAmountNativeToken)
   uniswapDayData.dailyVolumeUntracked = uniswapDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
   uniswapDayData.save()
 
@@ -229,17 +229,17 @@ export function handleSwap(event: Swap): void {
 
   // swap specific updating for token0
   token0DayData.dailyVolumeToken = token0DayData.dailyVolumeToken.plus(amount0Total)
-  token0DayData.dailyVolumeETH = token0DayData.dailyVolumeETH.plus(amount0Total.times(token0.derivedETH as BigDecimal))
+  token0DayData.dailyVolumeNativeToken = token0DayData.dailyVolumeNativeToken.plus(amount0Total.times(token0.derivedNativeToken as BigDecimal))
   token0DayData.dailyVolumeUSD = token0DayData.dailyVolumeUSD.plus(
-    amount0Total.times(token0.derivedETH as BigDecimal).times(bundle.ethPrice)
+    amount0Total.times(token0.derivedNativeToken as BigDecimal).times(bundle.nativeTokenPrice)
   )
   token0DayData.save()
 
   // swap specific updating
   token1DayData.dailyVolumeToken = token1DayData.dailyVolumeToken.plus(amount1Total)
-  token1DayData.dailyVolumeETH = token1DayData.dailyVolumeETH.plus(amount1Total.times(token1.derivedETH as BigDecimal))
+  token1DayData.dailyVolumeNativeToken = token1DayData.dailyVolumeNativeToken.plus(amount1Total.times(token1.derivedNativeToken as BigDecimal))
   token1DayData.dailyVolumeUSD = token1DayData.dailyVolumeUSD.plus(
-    amount1Total.times(token1.derivedETH as BigDecimal).times(bundle.ethPrice)
+    amount1Total.times(token1.derivedNativeToken as BigDecimal).times(bundle.nativeTokenPrice)
   )
   token1DayData.save()
 

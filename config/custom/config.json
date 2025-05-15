@@ -1,5 +1,5 @@
 {
-  "network": "subnet",
-  "factory": "0xa4DfF80B4a1D748BF28BC4A271eD834689Ea3407",
+  "network": "testnet",
+  "factory": "0xA55aa0EAF02592451dA587352C1B3fB82165Cebf",
   "startblock": "0"
 }

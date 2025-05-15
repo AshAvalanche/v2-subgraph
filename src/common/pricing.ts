@@ -12,13 +12,13 @@ import {
 } from './chain'
 import { ADDRESS_ZERO, ONE_BD, ZERO_BD } from './constants'
 
-export function getEthPriceInUSD(): BigDecimal {
+export function getNativeTokenPriceInUSD(): BigDecimal {
   // create an array with same length as STABLE_TOKEN_PAIRS
   let stableTokenPairs = new Array<Pair | null>(STABLE_TOKEN_PAIRS.length)
   let stableTokenReserves = new Array<BigDecimal>(STABLE_TOKEN_PAIRS.length)
   let stableTokenPrices = new Array<BigDecimal>(STABLE_TOKEN_PAIRS.length)
   let stableTokenIsToken0 = new Array<boolean>(STABLE_TOKEN_PAIRS.length)
-  let totalLiquidityETH = ZERO_BD
+  let totalLiquidityNativeToken = ZERO_BD
   for (let i = 0; i < STABLE_TOKEN_PAIRS.length; i++) {
     const stableTokenPair = Pair.load(STABLE_TOKEN_PAIRS[i])
     if (stableTokenPair) {
@@ -26,11 +26,11 @@ export function getEthPriceInUSD(): BigDecimal {
       if (stableTokenIsToken0[i]) {
         stableTokenReserves[i] = stableTokenPair.reserve1
         stableTokenPrices[i] = stableTokenPair.token0Price
-        totalLiquidityETH = totalLiquidityETH.plus(stableTokenPair.reserve1)
+        totalLiquidityNativeToken = totalLiquidityNativeToken.plus(stableTokenPair.reserve1)
       } else {
         stableTokenReserves[i] = stableTokenPair.reserve0
         stableTokenPrices[i] = stableTokenPair.token1Price
-        totalLiquidityETH = totalLiquidityETH.plus(stableTokenPair.reserve0)
+        totalLiquidityNativeToken = totalLiquidityNativeToken.plus(stableTokenPair.reserve0)
       }
     }
     stableTokenPairs[i] = stableTokenPair
@@ -39,7 +39,7 @@ export function getEthPriceInUSD(): BigDecimal {
   let tokenPrice = BigDecimal.fromString('0')
   for (let i = 0; i < STABLE_TOKEN_PAIRS.length; i++) {
     if (stableTokenPairs[i] !== null) {
-      tokenPrice = tokenPrice.plus(stableTokenPrices[i].times(safeDiv(stableTokenReserves[i], totalLiquidityETH)))
+      tokenPrice = tokenPrice.plus(stableTokenPrices[i].times(safeDiv(stableTokenReserves[i], totalLiquidityNativeToken)))
     }
   }
   return tokenPrice
@@ -67,8 +67,8 @@ export function findEthPerToken(token: Token): BigDecimal {
   // Handle stablecoins by inverting the ETH/USD price
   if (STABLECOINS.map<string>(s => s.toLowerCase()).includes(token.id.toLowerCase())) {
     const bundle = Bundle.load('1');
-    if (bundle && bundle.ethPrice.notEqual(ZERO_BD)) {
-      return safeDiv(ONE_BD, bundle.ethPrice);
+    if (bundle && bundle.nativeTokenPrice.notEqual(ZERO_BD)) {
+      return safeDiv(ONE_BD, bundle.nativeTokenPrice);
     }
     return ZERO_BD;
   }
@@ -83,19 +83,19 @@ export function findEthPerToken(token: Token): BigDecimal {
       let pairId = pairLookup.pair;
       if (pairId != ADDRESS_ZERO) {
         let pair = Pair.load(pairId);
-        if (pair && pair.reserveETH.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
+        if (pair && pair.reserveNativeToken.gt(MINIMUM_LIQUIDITY_THRESHOLD_ETH)) {
           // If the token is token0
           if (pair.token0 == token.id) {
             let token1 = Token.load(pair.token1);
             if (token1) {
-              return pair.token1Price.times(token1.derivedETH as BigDecimal);
+              return pair.token1Price.times(token1.derivedNativeToken as BigDecimal);
             }
           }
           // If the token is token1
           if (pair.token1 == token.id) {
             let token0 = Token.load(pair.token0);
             if (token0) {
-              return pair.token0Price.times(token0.derivedETH as BigDecimal);
+              return pair.token0Price.times(token0.derivedNativeToken as BigDecimal);
             }
           }
         }
@@ -120,8 +120,8 @@ export function getTrackedVolumeUSD(
   pair: Pair
 ): BigDecimal {
   let bundle = Bundle.load('1')!
-  let price0 = token0.derivedETH.times(bundle.ethPrice)
-  let price1 = token1.derivedETH.times(bundle.ethPrice)
+  let price0 = token0.derivedNativeToken.times(bundle.nativeTokenPrice)
+  let price1 = token1.derivedNativeToken.times(bundle.nativeTokenPrice)
 
   log.info('reserve0: {}, reserve1: {}, price0: {}, price1: {}', [
     pair.reserve0.toString(),
@@ -133,9 +133,9 @@ export function getTrackedVolumeUSD(
   log.info('pair.liquidityProviderCount: {}', [pair.liquidityProviderCount.toString()])
   log.info('token0: {}, token1: {}', [token0.id, token1.id])
   log.info('tokenAmount0: {}, tokenAmount1: {}', [tokenAmount0.toString(), tokenAmount1.toString()])
-  log.info('bundle.ethPrice: {}', [bundle.ethPrice.toString()])
+  log.info('bundle.nativeTokenPrice: {}', [bundle.nativeTokenPrice.toString()])
   log.info('bundle.id: {}', [bundle.id])
-  log.info('bundle.ethPrice: {}', [bundle.ethPrice.toString()])
+  log.info('bundle.nativeTokenPrice: {}', [bundle.nativeTokenPrice.toString()])
 
   // Convert token IDs and whitelist entries to lowercase for case-insensitive comparison
   let token0InWhitelist = WHITELIST.map<string>(s => s.toLowerCase()).includes(token0.id.toLowerCase());
@@ -206,8 +206,8 @@ export function getTrackedLiquidityUSD(
   token1: Token
 ): BigDecimal {
   let bundle = Bundle.load('1')!
-  let price0 = token0.derivedETH.times(bundle.ethPrice)
-  let price1 = token1.derivedETH.times(bundle.ethPrice)
+  let price0 = token0.derivedNativeToken.times(bundle.nativeTokenPrice)
+  let price1 = token1.derivedNativeToken.times(bundle.nativeTokenPrice)
 
   // both are whitelist tokens, take average of both amounts
   if (WHITELIST.map<string>(s => s.toLowerCase()).includes(token0.id.toLowerCase()) && WHITELIST.map<string>(s => s.toLowerCase()).includes(token1.id.toLowerCase())) {
@@ -235,8 +235,8 @@ export function getTokenTrackedLiquidityUSD(
   companionToken: Token
 ): BigDecimal {
   let bundle = Bundle.load('1')!
-  let price0 = tokenForPricing.derivedETH.times(bundle.ethPrice)
-  let price1 = companionToken.derivedETH.times(bundle.ethPrice)
+  let price0 = tokenForPricing.derivedNativeToken.times(bundle.nativeTokenPrice)
+  let price1 = companionToken.derivedNativeToken.times(bundle.nativeTokenPrice)
 
   // both are whitelist tokens, take average of both amounts
   if (WHITELIST.map<string>(s => s.toLowerCase()).includes(tokenForPricing.id.toLowerCase()) && WHITELIST.map<string>(s => s.toLowerCase()).includes(companionToken.id.toLowerCase())) {

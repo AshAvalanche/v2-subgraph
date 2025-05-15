@@ -1,35 +1,30 @@
 import { Address, BigDecimal, BigInt } from '@graphprotocol/graph-ts/index'
 
-export const WETH_ADDRESS = "0x52C84043CD9c865236f11d9Fc9F56aa003c1f922";
-export const USDC_ADDRESS = "0x17aB05351fC94a1a67Bf3f56DdbB941aE6c63E25";
-export const USDT_ADDRESS = "0x5aa01B3b5877255cE50cc55e8986a7a5fe29C70e";
-export const DAI_ADDRESS = "0x5DB9A7629912EBF95876228C24A848de0bfB43A9";
-export const UNI_ADDRESS = "0x4Ac1d98D9cEF99EC6546dEd4Bd550b0b287aaD6D";
-export const LINK_ADDRESS = "0xA4cD3b0Eb6E5Ab5d8CE4065BcCD70040ADAB1F00";
-export const FACTORY_ADDRESS = "0xa4DfF80B4a1D748BF28BC4A271eD834689Ea3407";
-export const ROUTER_ADDRESS = "0xe336d36FacA76840407e6836d26119E1EcE0A2b4";
+export const WPBBTC_ADDRESS = "0xd820f6D0297f805Dc7f640f891E1Df356A9DC496";
+export const USDC_ADDRESS = "0xbD432441c53620FBf4b393A6A0b7f3117990df98";
+export const USDT_ADDRESS = "0x74E50Bbc14d86e0959eD002a081852f3AeD04301";
+export const PLANB_ADDRESS = "0xd08C6F6D7B179E6d27EAd067aa0E46645B63Be8C";
+export const FACTORY_ADDRESS = "0xA55aa0EAF02592451dA587352C1B3fB82165Cebf";
+export const ROUTER_ADDRESS = "0x13b5932c12F0ac19716D4cbAcDBc078a5E27176e";
 
-export const REFERENCE_TOKEN = WETH_ADDRESS;
+export const REFERENCE_TOKEN = WPBBTC_ADDRESS;
 export const STABLE_TOKEN_PAIRS = [
-  `0x9fbcf01cee6a10cc9bf3c2a57450fa020e2e616e`, // WETH/USDC
-  `0x4a54c00fe54b42868b8e95abf611cbb41c0b76c5`, // DAI/USDC
+  `0x19d6d66f3e11ef83545fa187187674afbd55bf8a`, // USDC-USDT
 
 ];
 
 // token where amounts should contribute to tracked volume and liquidity
 export const WHITELIST: string[] = [
-  WETH_ADDRESS, // WETH
+  WPBBTC_ADDRESS, // WETH
   USDC_ADDRESS, // USDC
-  USDT_ADDRESS, // USDT
-  DAI_ADDRESS, // DAI
-  UNI_ADDRESS, // UNI
-  LINK_ADDRESS // LINK
+  USDT_ADDRESS, // PLANB
+  PLANB_ADDRESS
+
 ]
 
 export const STABLECOINS = [
   USDC_ADDRESS,
   USDT_ADDRESS,
-  DAI_ADDRESS
 ];
 
 // minimum liquidity required to count towards tracked volume for pairs with small # of Lps
