@@ -7,14 +7,14 @@ type UniswapFactory @entity {
 
   # total volume
   totalVolumeUSD: BigDecimal!
-  totalVolumeETH: BigDecimal!
+  totalVolumeNativeToken: BigDecimal!
 
   # untracked values - less confident USD scores
   untrackedVolumeUSD: BigDecimal!
 
   # total liquidity
   totalLiquidityUSD: BigDecimal!
-  totalLiquidityETH: BigDecimal!
+  totalLiquidityNativeToken: BigDecimal!
 
   # transactions
   txCount: BigInt!
@@ -44,7 +44,7 @@ type Token @entity {
   totalLiquidity: BigDecimal!
 
   # derived prices
-  derivedETH: BigDecimal!
+  derivedNativeToken: BigDecimal!
 
   # derived fields
   tokenDayData: [TokenDayData!]! @derivedFrom(field: "token")
@@ -66,10 +66,10 @@ type Pair @entity {
   totalSupply: BigDecimal!
 
   # derived liquidity
-  reserveETH: BigDecimal!
+  reserveNativeToken: BigDecimal!
   reserveUSD: BigDecimal!
   # used for separating per pair reserves and global
-  trackedReserveETH: BigDecimal!
+  trackedReserveNativeToken: BigDecimal!
 
   # Price in terms of the asset pair
   token0Price: BigDecimal!
@@ -186,7 +186,7 @@ type Swap @entity {
 # stores for USD calculations
 type Bundle @entity {
   id: ID!
-  ethPrice: BigDecimal! # price of ETH usd
+  nativeTokenPrice: BigDecimal! # price of the native token in USD
 }
 
 # Data accumulated and condensed into day stats for all of Uniswap
@@ -194,12 +194,12 @@ type UniswapDayData @entity {
   id: ID! # timestamp rounded to current day by dividing by 86400
   date: Int!
 
-  dailyVolumeETH: BigDecimal!
+  dailyVolumeNativeToken: BigDecimal!
   dailyVolumeUSD: BigDecimal!
   dailyVolumeUntracked: BigDecimal!
 
-  totalVolumeETH: BigDecimal!
-  totalLiquidityETH: BigDecimal!
+  totalVolumeNativeToken: BigDecimal!
+  totalLiquidityNativeToken: BigDecimal!
   totalVolumeUSD: BigDecimal! # Accumulate at each trade, not just calculated off whatever totalVolume is. making it more accurate as it is a live conversion
   totalLiquidityUSD: BigDecimal!
 
@@ -245,6 +245,7 @@ type PairDayData @entity {
 
   # derived liquidity
   reserveUSD: BigDecimal!
+  APY: BigDecimal
 
   # volume stats
   dailyVolumeToken0: BigDecimal!
@@ -260,13 +261,13 @@ type TokenDayData @entity {
 
   # volume stats
   dailyVolumeToken: BigDecimal!
-  dailyVolumeETH: BigDecimal!
+  dailyVolumeNativeToken: BigDecimal!
   dailyVolumeUSD: BigDecimal!
   dailyTxns: BigInt!
 
   # liquidity stats
   totalLiquidityToken: BigDecimal!
-  totalLiquidityETH: BigDecimal!
+  totalLiquidityNativeToken: BigDecimal!
   totalLiquidityUSD: BigDecimal!
 
   # price stats
@@ -309,4 +310,11 @@ type TokenHourData @entity {
 type PairTokenLookup @entity(immutable: true) {
   id: ID!
   pair: Pair!
+}
+
+type LiquidityProviderBalance @entity {
+  id: ID!
+  pair: Pair!
+  user: Bytes!
+  balance: BigDecimal!
 }
