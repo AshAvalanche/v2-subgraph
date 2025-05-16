@@ -15,10 +15,10 @@ export const STABLE_TOKEN_PAIRS = [
 
 // token where amounts should contribute to tracked volume and liquidity
 export const WHITELIST: string[] = [
-  WPBBTC_ADDRESS.toLowerCase(),
-  USDC_ADDRESS.toLowerCase(),
-  USDT_ADDRESS.toLowerCase(),
-  PLANB_ADDRESS.toLowerCase()
+  WPBBTC_ADDRESS,
+  USDC_ADDRESS,
+  USDT_ADDRESS,
+  PLANB_ADDRESS
 ];
 
 

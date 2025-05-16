@@ -59,6 +59,8 @@ In order to configure the subgrpah you will need to modify all the files in the 
      ]
      ```
 
+     Note: The string must be in lowercase.
+
    - A whitelist of tokens to be used to track volume and liquidity
      e.g. :
 
