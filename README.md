@@ -135,5 +135,4 @@ In order to configure the subgrpah you will need to modify all the files in the 
 
 Note:
 
-- Deployments will fail if there are uncommitted changes in the subgraph. Please commit your changes before deploying.
 - When using the custom setup, remember to modify the chain.ts and the config.ts files with your tokens, factory and router addresses.
